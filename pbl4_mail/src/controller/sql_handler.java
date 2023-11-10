@@ -1,5 +1,19 @@
 package controller;
 
+import java.awt.Font;
+
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JOptionPane;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -13,6 +27,7 @@ import java.util.List;
 import model.account;
 import model.message;
 import model.message;
+
 
 public class sql_handler {
 	static String serverName = "LAPTOP-0DP7SHTA\\SQLEXPRESS";
@@ -34,14 +49,13 @@ public class sql_handler {
 	
 	//thêm tài khoản
 	public static void insert(account newAccount) { 
-		  String query ="insert into account(id,user_name,password,phone) values(?,?,?,?)"; 
+		  String query ="insert into account(user_name,password,phone) values(?,?,?)"; 
 		  try { 
 			  Connection cnn = getConnection(); 
 			  PreparedStatement pstm = cnn.prepareStatement(query);
-			  pstm.setString(1,newAccount.getId()); 
-			  pstm.setString(2,newAccount.getUser_name());
-			  pstm.setString(3,newAccount.getPassword());
-			  pstm.setString(4,newAccount.getPhone());
+			  pstm.setString(1,newAccount.getUser_name());
+			  pstm.setString(2,newAccount.getPassword());
+			  pstm.setString(3,newAccount.getPhone());
 			  pstm.executeUpdate(); 
 			  }catch(Exception e) { 
 				  e.printStackTrace(); 
@@ -115,6 +129,33 @@ public class sql_handler {
 					 pstm.executeUpdate();
 					 cnn.close();
 			  	  }catch(Exception e) {}
+		}
+
+		public static void deleteMailSubject(String valueString) {
+			// TODO Auto-generated method stub
+			String query ="delete from email where subject = '"+valueString+"' ";
+			  try {
+				  Connection cnn = getConnection();
+				  PreparedStatement pstm = cnn.prepareStatement(query);
+				  pstm.executeUpdate();
+			  }catch(Exception e) {}
+		}
+		public static void SendMessage(String receiver,String subject, String body)
+		{
+			try {
+				
+				Socket soc = new Socket("localhost",5555);
+				DataOutputStream dos = new DataOutputStream(soc.getOutputStream());
+				DataInputStream dis = new DataInputStream(soc.getInputStream());
+				dos.writeUTF(receiver);
+				dos.writeUTF(body);
+				dos.writeUTF(subject);
+				String message = dis.readUTF();
+				JOptionPane.showMessageDialog(null,message);
+			}catch(Exception e)
+			{
+				
+			}
 		}
 		
 	

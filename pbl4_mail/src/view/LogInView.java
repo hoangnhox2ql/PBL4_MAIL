@@ -148,5 +148,6 @@ public class LogInView extends JFrame {
 		lblNewLabel_1.setIcon(new ImageIcon("C:\\Users\\ASUS\\Downloads\\pngtree-email-mail-message-text-flat-color-icon-vector-icon-png-image_1620997.jpg"));
 		lblNewLabel_1.setBounds(87, 0, 509, 387);
 		contentPane.add(lblNewLabel_1);
+		
 	}
 }

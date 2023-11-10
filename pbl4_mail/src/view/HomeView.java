@@ -28,12 +28,14 @@ import java.util.List;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class HomeView extends JFrame {
 
 	private JPanel contentPane;
 	private JTextField txtSearchingMails;
-	private JTable table;
+	private JTable table_mail;
 
 	/**
 	 * Launch the application.
@@ -95,7 +97,7 @@ public class HomeView extends JFrame {
 		JComboBox comboBox = new JComboBox();
 		comboBox.setForeground(new Color(0, 0, 0));
 		comboBox.setBackground(new Color(255, 255, 255));
-		comboBox.setModel(new DefaultComboBoxModel(new String[] {"All", "User", "Subject", "Date"}));
+		comboBox.setModel(new DefaultComboBoxModel(new String[] {"All", "User", "Subject"}));
 		comboBox.setBounds(10, 60, 159, 22);
 		contentPane.add(comboBox);
 		
@@ -105,40 +107,61 @@ public class HomeView extends JFrame {
 		contentPane.add(btnNewButton);
 		
 		JButton btn_compose = new JButton("COMPOSE");
+		btn_compose.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				java.awt.EventQueue.invokeLater(new Runnable() {
+	                public void run() {
+	                    new ComposeView().setVisible(true);
+	                }
+	            });
+	            
+			}
+		});
 		btn_compose.setBackground(new Color(255, 255, 255));
 		btn_compose.setBounds(538, 191, 96, 23);
 		contentPane.add(btn_compose);
-		
-		JButton btn_deleteMail = new JButton("DELETE");
-		btn_deleteMail.setBackground(new Color(255, 255, 255));
-		btn_deleteMail.setBounds(538, 266, 96, 23);
-		contentPane.add(btn_deleteMail);
 		
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(10, 115, 520, 265);
 		contentPane.add(scrollPane);
 		
-		table = new JTable();
-		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		table.setModel(new DefaultTableModel(new Object[][]{},
+		table_mail = new JTable();
+		table_mail.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		table_mail.setModel(new DefaultTableModel(new Object[][]{},
 			new String[] {
 					"Sender", "Subject", "Date"
 			}		
 		));
-		scrollPane.setViewportView(table);
+		scrollPane.setViewportView(table_mail);
 		
 		JLabel lblNewLabel = new JLabel("INBOX");
 		lblNewLabel.setBounds(20, 93, 46, 14);
 		contentPane.add(lblNewLabel);
 		showdata(sql_handler.findAll(ten));
 		
+		JButton btn_deleteMail = new JButton("DELETE");
+		btn_deleteMail.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int selectedRow = table_mail.getSelectedRow(); // Lấy chỉ mục của hàng đã chọn
+		        if (selectedRow >= 0) {
+		            Object value = table_mail.getValueAt(selectedRow, 1); 
+		            String valueString = value.toString();
+		            sql_handler.deleteMailSubject(valueString);
+		        }
+		        showdata(sql_handler.findAll(ten));
+			}
+		});
+		btn_deleteMail.setBackground(new Color(255, 255, 255));
+		btn_deleteMail.setBounds(538, 266, 96, 23);
+		contentPane.add(btn_deleteMail);
+		
 	}
 	public void showdata(List<message> message_data ) {
 		List<message> mess = new ArrayList<>();
 		mess = message_data;
 		DefaultTableModel tableModel ;
-	    table.getModel();
-	    tableModel=(DefaultTableModel)table.getModel();
+	    table_mail.getModel();
+	    tableModel=(DefaultTableModel)table_mail.getModel();
 	    tableModel.setRowCount(0);
 	    mess.forEach((message)->{
 			tableModel.addRow(new Object[] {

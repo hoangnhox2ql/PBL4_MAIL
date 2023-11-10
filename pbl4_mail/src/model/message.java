@@ -1,4 +1,5 @@
 package model;
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
@@ -10,7 +11,7 @@ public class message {
     private String receiver;
     private String subject;
     private String body;
-    private List<Attachment> attachments;
+    private File attachments;
     private LocalDateTime sendDate;
 
     public message(String sender, String subject, LocalDateTime sendDate) {
@@ -20,7 +21,7 @@ public class message {
 		this.sendDate = sendDate;
 	}
 
-	public message(int id, String sender, String receiver, String subject, String body, List<Attachment> attachments, LocalDateTime sendDate) {
+	public message(int id, String sender, String receiver, String subject, String body, File attachments, LocalDateTime sendDate) {
         this.id = id;
         this.sender = sender;
         this.receiver = receiver;
@@ -51,7 +52,7 @@ public class message {
         return body;
     }
 
-    public List<Attachment> getAttachments() {
+    public File getAttachments() {
         return attachments;
     }
 

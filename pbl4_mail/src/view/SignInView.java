@@ -141,7 +141,6 @@ public class SignInView extends JFrame {
 	            // If input is valid, create a new account and redirect to HomeView
 	            if (valid) {
 	                account acc = new account();
-	                acc.setId("user"+id);
 	                acc.setUser_name(username);
 	                acc.setPassword(password);
 	                acc.setPhone(phone);

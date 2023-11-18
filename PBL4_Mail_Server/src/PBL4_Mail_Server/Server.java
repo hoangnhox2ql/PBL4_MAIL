@@ -1,88 +1,241 @@
 package PBL4_Mail_Server;
 
-import java.io.BufferedReader;
 import java.io.DataInputStream;
-import java.io.DataOutput;
 import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.InetAddress;
+import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.Scanner;
 import java.net.Socket;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.List;
+import java.util.Vector;
+import model.account;
+import model.email;
+import controller.sql_handler;
+import java.io.ObjectOutputStream;
+import java.io.ByteArrayOutputStream;
+
+
 
 public class Server {
-	static String serverName = "LAPTOP-0DP7SHTA\\SQLEXPRESS";
-	static String db = "pbl4_mail";
-	static String url = "jdbc:sqlserver://" + serverName + ":1433;databaseName =" + db + ";encrypt=true;trustServerCertificate=true;";
-	static String user = "sa";
-	static String pass = "123456";
-	public static Connection getConnection() {// connection function
-		Connection cnn = null;
-		try {
-			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-			cnn = DriverManager.getConnection(url, user, pass);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return cnn;	
-	}
-
-	public static boolean isValidUsername(String username) {
-		boolean isValidLogin = false;
-	    try {
-	        Connection cnn = getConnection();
-	        String sql = "SELECT * FROM account WHERE user_name = ?";
-	        PreparedStatement stm = cnn.prepareStatement(sql);
-	        stm.setString(1, username);
-	        ResultSet resultSet = stm.executeQuery();
-	        if (resultSet.next()) {
-	            isValidLogin = true;
-	        }
-	        cnn.close();
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
-	    return isValidLogin;
-	}
 	public static void main(String []args)
-	{
-		String receiver;
-		String body;
-		String subject;
-		boolean chack =false;
-		try {
-			
+	{	
+		new Server();
+	}
+	Vector<EmailProcessing> Clientlist = new Vector<EmailProcessing>();
+	public Server() {
+		try {                     
 			ServerSocket server = new ServerSocket(5555);
-			Connection con = getConnection();
-			while(true)
-			{
+			while (true) {
 				Socket soc = server.accept();
-				DataInputStream dis = new DataInputStream(soc.getInputStream());
-				DataOutputStream dos = new DataOutputStream(soc.getOutputStream());
-				receiver = dis.readUTF();
-				body = dis.readUTF();
-				subject = dis.readUTF();
-				chack = isValidUsername(receiver);
-				if(!chack) {
-					dos.writeUTF("email khong ton tai!!!");
-				}
-				else {
-					
-				}
+				EmailProcessing t = new EmailProcessing(soc,this);
+				Clientlist.add(t);
+				t.start();
 			}
-			
-		}catch(Exception e)
-		{
+		} catch(Exception e) {
 			
 		}
-		
+	}
+}
+
+class EmailProcessing extends Thread {
+	Socket soc;
+	Server server;
+	public EmailProcessing(Socket soc,Server server) {
+		this.soc = soc;
+		this.server = server;
 	}
 	
+	public void run() {
+		while (true) {
+			try {
+				
+				DataInputStream dis = new DataInputStream(soc.getInputStream());
+				DataOutputStream dos = new DataOutputStream(soc.getOutputStream());
+				String mess = dis.readUTF();
+				if(mess.equals("SIGN_IN")) {
+					String username = dis.readUTF();
+					String password = dis.readUTF();
+					if(sql_handler.isValidLogin(username, password)) {
+						dos.writeUTF("SIGN_IN_OK");
+					}else {
+						dos.writeUTF("SIGN_IN_NO_OK");
+					}
+				}
+				
+				if(mess.equals("SIGN_UP")) {
+					String usernamee = dis.readUTF();
+					String passwordd = dis.readUTF();
+					String phonee = dis.readUTF();
+					account acc = new account();
+					acc.setUser_name(usernamee);
+					acc.setPassword(passwordd);
+					acc.setPhone(phonee);
+					if(usernamee != null && passwordd != null && phonee != null) {
+						if(sql_handler.isValidUsername(usernamee) && sql_handler.isValidPhone(phonee)) {
+							dos.writeUTF("SAME_USERNAME_PHONE");
+						}else {
+							sql_handler.insert(acc);
+							dos.writeUTF("SIGN_UP_OK");
+						}
+						
+					}
+				}
+				
+				if(mess.equals("FORGOT_PASSWORD")) {
+					String phone = dis.readUTF();
+					if(sql_handler.isValidPhone(phone)) {
+						dos.writeUTF("FORGOT_PASSWORD_OK");
+					}
+					else {
+						dos.writeUTF("FORGOT_PASSWORD_NO_OK");
+					}
+				}
+				
+				if(mess.equals("CHANGE_PASSWORD")) {
+					String newpass = dis.readUTF();
+			        String phone = dis.readUTF();
+			        if (newpass != null && !newpass.isEmpty() && phone != null && !phone.isEmpty()) {
+			            boolean success = sql_handler.changePass(newpass, phone);
+			            if (success) {
+			                dos.writeUTF("CHANGE_PASSWORD_OK");
+			            } else {
+			                dos.writeUTF("CHANGE_PASSWORD_NO_OK");
+			            }
+			        }
+				}
+				
+				if(mess.equals("ONLINE")) {
+					String username = dis.readUTF();
+					List<email> users = sql_handler.findAll(username);
+					ObjectOutputStream oos = new ObjectOutputStream(soc.getOutputStream());
+				    oos.writeObject(users);
+				    oos.flush();
+				}
+				
+//				if(mess.equals("SEND_MAIL")) {
+//					String sender = dis.readUTF();
+//				    String receiver = dis.readUTF();
+//				    String subject = dis.readUTF();
+//				    String body = dis.readUTF();
+//				    boolean check = sql_handler.isValidUsername(receiver);
+//				    if(check) {
+//				    	if (receiver != null && !receiver.isEmpty() && subject != null && !subject.isEmpty()) {
+//					        boolean success = sql_handler.insertMail(sender,receiver, subject, body);
+//					        if (success) {
+//					            dos.writeUTF("MAIL_SENT_SUCCESS");
+//					        } 
+//						}
+//				    }else {
+//			            dos.writeUTF("MAIL_SENT_FAILURE");
+//			        }
+//				    
+//				}
+				
+				if (mess.equals("SEND_MAIL")) {
+				        String sender = dis.readUTF();
+				        String receiver = dis.readUTF();
+				        String subject = dis.readUTF();
+				        String body = dis.readUTF();
+
+				        // Check if the client is attaching a file
+				        String attachFileFlag = dis.readUTF();
+				        String fileName = null;
+				        byte[] fileContent = null;
+
+				        if (attachFileFlag.equals("YES")) {
+				        	System.out.println("chạy đoạn này");
+				            try {
+				                fileName = dis.readUTF();
+				                System.out.println(fileName);
+				                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				                byte[] buffer = new byte[1024];
+				                int bytesRead;
+
+				                while ((bytesRead = dis.read(buffer)) != -1) {
+				                    baos.write(buffer, 0, bytesRead);
+				                }
+
+				                fileContent = baos.toByteArray();
+				                System.out.println("[*] File '" + fileName + "' received successfully.");
+				            } catch (IOException e) {
+				                System.out.println("không thể gửi được file");
+				            }
+				        }
+
+				        boolean check = sql_handler.isValidUsername(receiver);
+				        if (check) {
+				            if (receiver != null && !receiver.isEmpty() && subject != null && !subject.isEmpty()) {
+				                boolean success = sql_handler.insertMail(sender, receiver, subject, body, fileName, fileContent);
+				                if (success) {
+				                    dos.writeUTF("MAIL_SENT_SUCCESS");
+				                } else {
+				                    dos.writeUTF("MAIL_SENT_FAILURE");
+				                }
+				            }
+				        } else {
+				            dos.writeUTF("MAIL_SENT_FAILURE");
+				        }
+				    
+				}
+				if(mess.equals("DELETE")) {
+					String selectedRow = dis.readUTF();
+					if (selectedRow != null && !selectedRow.isEmpty() ) {
+						boolean success = sql_handler.deleteMailSubject(selectedRow);
+						if(success) {
+							dos.writeUTF("DELETE_OK");
+						}
+					}
+				}
+				if(mess.equals("SEARCH")) {
+				    String selectedItem = dis.readUTF();
+				    String textSearch = dis.readUTF();
+				    String username = dis.readUTF();
+
+				    List<email> mails = null;
+				    if (selectedItem != null && !selectedItem.isEmpty()) {
+				        if (selectedItem.equals("All")) {
+				            mails = sql_handler.findAll(username);
+				            dos.writeUTF("SEARCH_OK");
+				            ObjectOutputStream oos = new ObjectOutputStream(soc.getOutputStream());
+					        oos.writeObject(mails);
+					        oos.flush();
+				        } else if (selectedItem.equals("Sender")) {
+				            mails = sql_handler.findSender(textSearch, username);
+				            dos.writeUTF("SEARCH_OK");
+				            ObjectOutputStream oos = new ObjectOutputStream(soc.getOutputStream());
+					        oos.writeObject(mails);
+					        oos.flush();
+				        } else if (selectedItem.equals("Subject")) {
+				            mails = sql_handler.findSubject(textSearch, username);
+				            dos.writeUTF("SEARCH_OK");
+				            ObjectOutputStream oos = new ObjectOutputStream(soc.getOutputStream());
+					        oos.writeObject(mails);
+					        oos.flush();
+				        }
+				    }
+				}
+				if(mess.equals("GET_BODY")) {
+					String sender = dis.readUTF();
+					String subject = dis.readUTF();
+					String date = dis.readUTF();
+					String body = sql_handler.getMailBody(sender, subject, date);
+					dos.writeUTF(body);
+				}
+				if(mess.equals("LIST_MAIL_SENT")) {
+					String username = dis.readUTF();
+					List<email> mails = null;
+					if (username != null && !username.isEmpty()) {
+						mails = sql_handler.findListSent(username);
+						dos.writeUTF("LIST_MAIL_OK");
+			            ObjectOutputStream oos = new ObjectOutputStream(soc.getOutputStream());
+				        oos.writeObject(mails);
+				        oos.flush();
+					}
+				}
+				
+				
+			} catch (Exception e) {
+				
+			}
+		}
+	}
 }

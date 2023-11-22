@@ -2,6 +2,7 @@ package PBL4_Mail_Server;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -138,24 +139,27 @@ class EmailProcessing extends Thread {
 
 				        // Check if the client is attaching a file
 				        String attachFileFlag = dis.readUTF();
+				        System.out.println(attachFileFlag);
 				        String fileName = null;
-				        byte[] fileContent = null;
+				        byte[] buffer = new byte[4 * 1024];
 
 				        if (attachFileFlag.equals("YES")) {
 				        	System.out.println("chạy đoạn này");
 				            try {
 				                fileName = dis.readUTF();
 				                System.out.println(fileName);
-				                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				                byte[] buffer = new byte[1024];
-				                int bytesRead;
-
-				                while ((bytesRead = dis.read(buffer)) != -1) {
-				                    baos.write(buffer, 0, bytesRead);
-				                }
-
-				                fileContent = baos.toByteArray();
-				                System.out.println("[*] File '" + fileName + "' received successfully.");
+				                int bytes = 0;
+				        		FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+				        		long size = dis.readLong(); // read file size
+				        		
+				        		while (size > 0 && (bytes = dis.read(buffer, 0,(int)Math.min(buffer.length, size)))!= -1) {
+				        			// Here we write the file using write method
+				        			fileOutputStream.write(buffer, 0, bytes);
+				        			size -= bytes; // read upto file size
+				        		}
+				        		
+				        		System.out.println(buffer);
+				        		
 				            } catch (IOException e) {
 				                System.out.println("không thể gửi được file");
 				            }
@@ -164,7 +168,7 @@ class EmailProcessing extends Thread {
 				        boolean check = sql_handler.isValidUsername(receiver);
 				        if (check) {
 				            if (receiver != null && !receiver.isEmpty() && subject != null && !subject.isEmpty()) {
-				                boolean success = sql_handler.insertMail(sender, receiver, subject, body, fileName, fileContent);
+				                boolean success = sql_handler.insertMail(sender, receiver, subject, body, fileName, buffer);
 				                if (success) {
 				                    dos.writeUTF("MAIL_SENT_SUCCESS");
 				                } else {

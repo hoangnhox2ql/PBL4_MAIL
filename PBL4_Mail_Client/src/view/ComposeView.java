@@ -141,17 +141,27 @@ public class ComposeView extends JFrame {
                 SignInView.dos.writeUTF(message);
 
                 if (file != null) {
-                    SignInView.dos.writeUTF("YES");
-                    SignInView.dos.writeUTF(file.getName());
+                	SignInView.dos.writeUTF("YES");
+                	System.out.println(file);
+                	SignInView.dos.writeUTF(file.getName());
+                	int bytes = 0;
+            		// Open the File where he located in your pc
+            		
+            		FileInputStream fileInputStream
+            			= new FileInputStream(file);
 
-                    try (FileInputStream fis = new FileInputStream(file)) {
-                        byte[] buffer = new byte[1024];
-                        int bytesRead;
-                        while ((bytesRead = fis.read(buffer)) != -1) {
-                            SignInView.dos.write(buffer, 0, bytesRead);
-                        }
-                        System.out.println("[*] File '" + file.getName() + "' sent successfully.");
-                    }
+            		// Here we send the File to Server
+            		SignInView.dos.writeLong(file.length());
+            		// Here we break file into chunks
+            		byte[] buffer = new byte[4 * 1024];
+            		while ((bytes = fileInputStream.read(buffer))
+            			!= -1) {
+            		// Send the file to Server Socket 
+            		SignInView.dos.write(buffer, 0, bytes);
+            		
+            		}
+            		// close the file here
+            		fileInputStream.close();
                 } 
                 
                 // Check for server response

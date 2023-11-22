@@ -16,21 +16,19 @@ import java.io.InputStream;
 
 
 public class sql_handler {
-	static String serverName = "LAPTOP-0DP7SHTA\\SQLEXPRESS";
-	static String db = "pbl4_mail";
-	static String url = "jdbc:sqlserver://" + serverName + ":1433;databaseName =" + db + ";encrypt=true;trustServerCertificate=true;";
-	static String user = "sa";
-	static String pass = "123456";
-
-	public static Connection getConnection() {// connection function
-		Connection cnn = null;
-		try {
-			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-			cnn = DriverManager.getConnection(url, user, pass);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return cnn;	
+	static String url = "jdbc:mysql://127.0.0.1:3306/pbl4_mail";
+    static String user = "root";
+    static String pass = "";
+	public static Connection getConnection() {
+        Connection conn = null;
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            conn = DriverManager.getConnection(url, user, pass);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return conn;
+    
 	}
 	
 	//thêm tài khoản
@@ -218,7 +216,7 @@ public class sql_handler {
 		    boolean success = false;
 		    try {
 		        Connection connection = getConnection();
-		        String query = "INSERT INTO email (sender, receiver, subject, body, file_name, file_size, send_date) VALUES (?, ?, ?, ?, ?, ?, GETDATE());";
+		        String query = "INSERT INTO email (sender, receiver, subject, body, file_name, file_size, send_date) VALUES (?, ?, ?, ?, ?, ?, NOW());";
 		        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 		            preparedStatement.setString(1, sender);
 		            preparedStatement.setString(2, receiver);

@@ -148,13 +148,13 @@ public class SignUpView extends JFrame {
 	                		java.awt.EventQueue.invokeLater(new Runnable() {
 			                    @Override
 			                    public void run() {
-			                        //new HomeView(username).setVisible(true);
+			                        new HomeView(username).setVisible(true);
 			                    }
 			                });
 			                SignUpView.this.dispose();
 	                	}
 	                	else if(rep.equals("SAME_USERNAME_PHONE")) {
-	                		errorLabel.setText("Trùng tên tài khoản hoặc số điện thoại!!!");
+	                		errorLabel.setText("The phone numbers or account's name is being used!");
 	                	}
 					} catch (Exception e2) {
 						// TODO: handle exception

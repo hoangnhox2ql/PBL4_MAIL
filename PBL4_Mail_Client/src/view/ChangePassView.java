@@ -69,7 +69,14 @@ public class ChangePassView extends JFrame {
 		passwordField_confirm.setBounds(10, 145, 266, 20);
 		contentPane.add(passwordField_confirm);
 		
+		JLabel lb_error = new JLabel("");
+		lb_error.setForeground(new Color(255, 0, 0));
+		lb_error.setFont(new Font("Tahoma", Font.PLAIN, 14));
+		lb_error.setBounds(10, 190, 266, 14);
+		contentPane.add(lb_error);
+		
 		JButton btn_confirm = new JButton("Confirm");
+		btn_confirm.setForeground(new Color(0, 0, 0));
 		btn_confirm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String text = passwordField.getText();
@@ -83,33 +90,32 @@ public class ChangePassView extends JFrame {
 						if(rep.equals("CHANGE_PASSWORD_OK")) {
 							JOptionPane.showMessageDialog(ChangePassView.this, "Your password was changed");
 							ChangePassView.this.dispose();
+							EventQueue.invokeLater(new Runnable() {
+								public void run() {
+									try {
+										SignInView frame = new SignInView();
+										frame.setVisible(true);
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+								}
+							});
 						}
 					} catch (Exception e2) {
 						// TODO: handle exception
 						System.out.println("loi ko ket noi dc server");
 					}
 				}
-				EventQueue.invokeLater(new Runnable() {
-					public void run() {
-						try {
-							SignInView frame = new SignInView();
-							frame.setVisible(true);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				});
+				else {
+					lb_error.setText("Your confirmation password doesn't match!");
+				}
 			}
 		});
 		btn_confirm.setBackground(Color.WHITE);
 		btn_confirm.setBounds(94, 222, 89, 23);
 		contentPane.add(btn_confirm);
 		
-		JLabel lblNewLabel = new JLabel("");
-		lblNewLabel.setForeground(new Color(255, 0, 0));
-		lblNewLabel.setFont(new Font("Tahoma", Font.PLAIN, 14));
-		lblNewLabel.setBounds(10, 190, 266, 14);
-		contentPane.add(lblNewLabel);
+		
 	}
 
 }

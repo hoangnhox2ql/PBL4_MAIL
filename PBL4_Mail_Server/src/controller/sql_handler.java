@@ -10,25 +10,27 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import model.account;
 import model.email;
-
+import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 
 public class sql_handler {
-	static String url = "jdbc:mysql://127.0.0.1:3306/pbl4_mail";
-    static String user = "root";
-    static String pass = "";
-	public static Connection getConnection() {
-        Connection conn = null;
-        try {
-            Class.forName("com.mysql.jdbc.Driver");
-            conn = DriverManager.getConnection(url, user, pass);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return conn;
-    
+	static String serverName = "LAPTOP-0DP7SHTA\\SQLEXPRESS";
+	static String db = "pbl4_mail";
+	static String url = "jdbc:sqlserver://" + serverName + ":1433;databaseName =" + db + ";encrypt=true;trustServerCertificate=true;";
+	static String user = "sa";
+	static String pass = "123456";
+
+	public static Connection getConnection() {// connection function
+		Connection cnn = null;
+		try {
+			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+			cnn = DriverManager.getConnection(url, user, pass);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return cnn;	
 	}
 	
 	//thêm tài khoản
@@ -159,6 +161,7 @@ public class sql_handler {
 		    return changePass;
 		}
 
+		//xóa tên dựa trên tiêu đề 
 		public static boolean deleteMailSubject(String valueString) {
 		    try {
 		        String query = "delete from email where subject = ?";
@@ -173,6 +176,7 @@ public class sql_handler {
 		        return false;
 		    }
 		}
+		
 		//check tên
 		public static boolean isValidUsername(String username) {
 			boolean isValidLogin = false;
@@ -192,31 +196,12 @@ public class sql_handler {
 		    return isValidLogin;
 		}
 
-//		public static boolean insertMail(String sender, String receiver, String subject, String body) {
-//	        boolean success = false;
-//	        try {
-//	            Connection connection = getConnection();
-//	            String query = "  INSERT INTO email (sender, receiver, subject,body, send_date) VALUES (?,?,?,?,GETDATE());";
-//	            try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-//	                preparedStatement.setString(1, sender);
-//	                preparedStatement.setString(2, receiver);
-//	                preparedStatement.setString(3, subject);
-//	                preparedStatement.setString(4, body);
-//	                int rowsAffected = preparedStatement.executeUpdate();
-//	                success = rowsAffected > 0;
-//	            }
-//	            connection.close();
-//	        } catch (Exception e) {
-//	            e.printStackTrace();
-//	        }
-//	        return success;
-//	    }
-		
+		//Trả về true false để kiểm tra thư có được đưa vvaof database của server
 		public static boolean insertMail(String sender, String receiver, String subject, String body, String fileName, byte[] fileContent) {
 		    boolean success = false;
 		    try {
 		        Connection connection = getConnection();
-		        String query = "INSERT INTO email (sender, receiver, subject, body, file_name, file_size, send_date) VALUES (?, ?, ?, ?, ?, ?, NOW());";
+		        String query = "INSERT INTO email (sender, receiver, subject, body, file_name, file_size, send_date) VALUES (?, ?, ?, ?, ?, ?, GETDATE());";
 		        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 		            preparedStatement.setString(1, sender);
 		            preparedStatement.setString(2, receiver);
@@ -243,8 +228,46 @@ public class sql_handler {
 		    }
 		    return success;
 		}
-
 		
+		//Trả về tệp đính kèm dưới dạng byte
+		public static byte[] getFileContent(String sender, String subject, String date, String nameFile) {
+		    byte[] fileContent = null;
+		    try {
+		        Connection connection = getConnection();
+		        String query = "SELECT file_size FROM email WHERE sender = ? AND subject = ? AND file_name = ? AND send_date = '"+date+"' ";
+		        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+		            preparedStatement.setString(1, sender);
+		            preparedStatement.setString(2, subject);
+		            preparedStatement.setString(3, nameFile);
+
+		            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+		                if (resultSet.next()) {
+		                    InputStream inputStream = resultSet.getBinaryStream("file_size");
+		                    if (inputStream != null) {
+		                        // Read the file content into the byte array
+		                        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		                        int bytesRead;
+		                        byte[] data = new byte[4096];
+
+		                        while ((bytesRead = inputStream.read(data, 0, data.length)) != -1) {
+		                            buffer.write(data, 0, bytesRead);
+		                        }
+
+		                        fileContent = buffer.toByteArray();
+		                        buffer.close();
+		                        inputStream.close();
+		                    }
+		                }
+		            }
+		        }
+		        connection.close();
+		    } catch (Exception e) {
+		        e.printStackTrace();
+		    }
+		    return fileContent;
+		}
+
+		//Trả về phần thân thư 
 		public static String getMailBody(String sender, String subject, String date) {
 		    try {
 		        String query = "SELECT body FROM email WHERE sender = ? AND subject = ? AND send_date = '"+date+"' ";
@@ -266,6 +289,7 @@ public class sql_handler {
 		    }
 		}
 
+		//Trả về list Thư mà người dùng đã gửi 
 		public static List<email> findListSent(String username) {
 			List<email> emailList = new ArrayList<email>();
 		    String query = "SELECT subject,receiver,send_date from email where sender = '" + username + "'";
@@ -282,4 +306,47 @@ public class sql_handler {
 		    }
 		    return emailList;
 		}
+
+		//Lấy tên của file
+		public static String getNameFile(String sender, String subject, String date) {
+			// TODO Auto-generated method stub
+			try {
+		        String query = "SELECT file_name FROM email WHERE sender = ? AND subject = ? AND send_date = '"+date+"' ";
+		        try (Connection cnn = getConnection();
+		            PreparedStatement pstm = cnn.prepareStatement(query)) {
+		            pstm.setString(1, sender);
+		            pstm.setString(2, subject);
+		            ResultSet rs = pstm.executeQuery();
+		            if (rs.next()) {
+		                String nameFile = rs.getString(1);
+		                return nameFile;
+		            } else {
+		                return null;
+		            }
+		        }
+			} catch (SQLException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		
+//		public static boolean insertMail(String sender, String receiver, String subject, String body) {
+//	        boolean success = false;
+//	        try {
+//	            Connection connection = getConnection();
+//	            String query = "  INSERT INTO email (sender, receiver, subject,body, send_date) VALUES (?,?,?,?,GETDATE());";
+//	            try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+//	                preparedStatement.setString(1, sender);
+//	                preparedStatement.setString(2, receiver);
+//	                preparedStatement.setString(3, subject);
+//	                preparedStatement.setString(4, body);
+//	                int rowsAffected = preparedStatement.executeUpdate();
+//	                success = rowsAffected > 0;
+//	            }
+//	            connection.close();
+//	        } catch (Exception e) {
+//	            e.printStackTrace();
+//	        }
+//	        return success;
+//	    }
 }

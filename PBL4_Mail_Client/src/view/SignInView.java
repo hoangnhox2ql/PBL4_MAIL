@@ -94,28 +94,33 @@ public class SignInView extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				String user =  tf_username.getText();
 		    	String pass = tf_password.getText();
-		    	try {
-					dos.writeUTF("SIGN_IN");
-					dos.writeUTF("trungnhan@gmail.com");
-					dos.writeUTF("1234567");
-					String rep = dis.readUTF();
-					if (rep.equals("SIGN_IN_OK")) {
-			            java.awt.EventQueue.invokeLater(new Runnable() {
-			                public void run() {
-			                    //new HomeView(user).setVisible(true);
-			                	new HomeView("trungnhan@gmail.com").setVisible(true);
-			                }
-			            });
-			            SignInView.this.dispose();
-			        } else if(rep.equals("SIGN_IN_NO_OK")) {
-			            JOptionPane.showMessageDialog(SignInView.this, "Wrong email or password !");
-			            tf_password.setText("");
-			            tf_username.setText("");
-			        }
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					System.out.println("lỗi ko kết nối đc server");
-				}
+		    	if(!user.isEmpty()&& !pass.isEmpty()) {
+		    		try {
+						dos.writeUTF("SIGN_IN");
+						dos.writeUTF(user);
+						dos.writeUTF(pass);
+						String rep = dis.readUTF();
+						if (rep.equals("SIGN_IN_OK")) {
+				            java.awt.EventQueue.invokeLater(new Runnable() {
+				                public void run() {
+				                    //new HomeView(user).setVisible(true);
+				                	new HomeView(user).setVisible(true);
+				                }
+				            });
+				            SignInView.this.dispose();
+				        } else if(rep.equals("SIGN_IN_NO_OK")) {
+				            JOptionPane.showMessageDialog(SignInView.this, "Wrong email or password !");
+				            tf_password.setText("");
+				            tf_username.setText("");
+				        }
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						System.out.println("lỗi ko kết nối đc server");
+					}
+		    	} else {
+		    		JOptionPane.showMessageDialog(SignInView.this, "Please enter your Email's account and password! ");
+		    	}
+		    	
 			}
 		});
 		btn_login.setBounds(10, 168, 212, 23);

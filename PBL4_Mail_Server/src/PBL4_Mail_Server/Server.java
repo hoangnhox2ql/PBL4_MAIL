@@ -71,7 +71,7 @@ class EmailProcessing extends Thread {
 					acc.setPassword(passwordd);
 					acc.setPhone(phonee);
 					if(usernamee != null && passwordd != null && phonee != null) {
-						if(sql_handler.isValidUsername(usernamee) && sql_handler.isValidPhone(phonee)) {
+						if(sql_handler.isValidUsername(usernamee) || sql_handler.isValidPhone(phonee)) {
 							dos.writeUTF("SAME_USERNAME_PHONE");
 						}else {
 							sql_handler.insert(acc);
@@ -139,15 +139,12 @@ class EmailProcessing extends Thread {
 
 				        // Check if the client is attaching a file
 				        String attachFileFlag = dis.readUTF();
-				        System.out.println(attachFileFlag);
 				        String fileName = null;
 				        byte[] buffer = new byte[4 * 1024];
 
 				        if (attachFileFlag.equals("YES")) {
-				        	System.out.println("chạy đoạn này");
 				            try {
 				                fileName = dis.readUTF();
-				                System.out.println(fileName);
 				                int bytes = 0;
 				        		FileOutputStream fileOutputStream = new FileOutputStream(fileName);
 				        		long size = dis.readLong(); // read file size
@@ -158,7 +155,7 @@ class EmailProcessing extends Thread {
 				        			size -= bytes; // read upto file size
 				        		}
 				        		
-				        		System.out.println(buffer);
+				        		System.out.println("gửi ok");
 				        		
 				            } catch (IOException e) {
 				                System.out.println("không thể gửi được file");
@@ -217,13 +214,36 @@ class EmailProcessing extends Thread {
 				        }
 				    }
 				}
+				
 				if(mess.equals("GET_BODY")) {
 					String sender = dis.readUTF();
 					String subject = dis.readUTF();
 					String date = dis.readUTF();
 					String body = sql_handler.getMailBody(sender, subject, date);
+					String nameFile = sql_handler.getNameFile(sender,subject,date);
 					dos.writeUTF(body);
+					if(nameFile != null) {
+						dos.writeUTF(nameFile);
+					}
+					else {
+						dos.writeUTF("");
+					}
+					
 				}
+				if (mess.equals("GET_FILE")) {
+				    String sender = dis.readUTF();
+				    String subject = dis.readUTF();
+				    String date = dis.readUTF();
+				    String nameFile = dis.readUTF();
+				    // Lấy nội dung của tệp tin từ cơ sở dữ liệu
+				    byte[] buffer = sql_handler.getFileContent(sender, subject, date, nameFile);
+				    
+				    // Gửi kích thước của buffer đến client
+				    dos.writeInt(buffer.length);
+				    // Gửi nội dung của buffer đến client
+				    dos.write(buffer, 0, buffer.length);
+				}
+				
 				if(mess.equals("LIST_MAIL_SENT")) {
 					String username = dis.readUTF();
 					List<email> mails = null;

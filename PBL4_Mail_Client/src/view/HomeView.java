@@ -81,6 +81,7 @@ public class HomeView extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				HomeView.this.dispose();
+				
 			}
 		});
 		lblNewLabel_1.setForeground(new Color(255, 0, 0));

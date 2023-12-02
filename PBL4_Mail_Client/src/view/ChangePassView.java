@@ -43,7 +43,7 @@ public class ChangePassView extends JFrame {
 		setTitle("Change Password");
 		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\ASUS\\Downloads\\3158180.png"));
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 308, 308);
+		setBounds(100, 100, 371, 308);
 		contentPane = new JPanel();
 		contentPane.setBackground(new Color(255, 255, 255));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -57,7 +57,7 @@ public class ChangePassView extends JFrame {
 		contentPane.add(lblNewLabel_1);
 		
 		passwordField = new JPasswordField();
-		passwordField.setBounds(10, 54, 266, 20);
+		passwordField.setBounds(10, 54, 335, 20);
 		contentPane.add(passwordField);
 		
 		JLabel lblNewLabel_2 = new JLabel("Confirm password");
@@ -66,13 +66,13 @@ public class ChangePassView extends JFrame {
 		contentPane.add(lblNewLabel_2);
 		
 		passwordField_confirm = new JPasswordField();
-		passwordField_confirm.setBounds(10, 145, 266, 20);
+		passwordField_confirm.setBounds(10, 145, 335, 20);
 		contentPane.add(passwordField_confirm);
 		
 		JLabel lb_error = new JLabel("");
 		lb_error.setForeground(new Color(255, 0, 0));
 		lb_error.setFont(new Font("Tahoma", Font.PLAIN, 14));
-		lb_error.setBounds(10, 190, 266, 14);
+		lb_error.setBounds(10, 190, 335, 14);
 		contentPane.add(lb_error);
 		
 		JButton btn_confirm = new JButton("Confirm");
@@ -112,7 +112,7 @@ public class ChangePassView extends JFrame {
 			}
 		});
 		btn_confirm.setBackground(Color.WHITE);
-		btn_confirm.setBounds(94, 222, 89, 23);
+		btn_confirm.setBounds(133, 215, 89, 23);
 		contentPane.add(btn_confirm);
 		
 		

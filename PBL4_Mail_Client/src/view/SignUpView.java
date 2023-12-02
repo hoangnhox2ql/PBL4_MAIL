@@ -53,7 +53,7 @@ public class SignUpView extends JFrame {
 		setTitle("Create an account");
 		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\ASUS\\Downloads\\3158180.png"));
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 302, 435);
+		setBounds(100, 100, 378, 435);
 		contentPane = new JPanel();
 		contentPane.setBackground(new Color(255, 255, 255));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -67,7 +67,7 @@ public class SignUpView extends JFrame {
 		contentPane.add(lblNewLabel);
 		
 		tf_username = new JTextField();
-		tf_username.setBounds(10, 74, 266, 20);
+		tf_username.setBounds(10, 74, 342, 20);
 		contentPane.add(tf_username);
 		tf_username.setColumns(10);
 		
@@ -77,7 +77,7 @@ public class SignUpView extends JFrame {
 		contentPane.add(lblNewLabel_1);
 		
 		passwordField = new JPasswordField();
-		passwordField.setBounds(10, 147, 266, 20);
+		passwordField.setBounds(10, 147, 342, 20);
 		contentPane.add(passwordField);
 		
 		JLabel lblNewLabel_2 = new JLabel("Confirm password");
@@ -86,7 +86,7 @@ public class SignUpView extends JFrame {
 		contentPane.add(lblNewLabel_2);
 		
 		passwordField_confirm = new JPasswordField();
-		passwordField_confirm.setBounds(10, 225, 266, 20);
+		passwordField_confirm.setBounds(10, 225, 342, 20);
 		contentPane.add(passwordField_confirm);
 		
 		JLabel lblNewLabel_3 = new JLabel("Phone");
@@ -95,7 +95,7 @@ public class SignUpView extends JFrame {
 		contentPane.add(lblNewLabel_3);
 		
 		tf_phone = new JTextField();
-		tf_phone.setBounds(10, 298, 266, 20);
+		tf_phone.setBounds(10, 298, 342, 20);
 		contentPane.add(tf_phone);
 		tf_phone.setColumns(10);
 		
@@ -103,7 +103,7 @@ public class SignUpView extends JFrame {
 		errorLabel.setForeground(new Color(255, 0, 0));
 		errorLabel.setBackground(new Color(255, 255, 255));
 		errorLabel.setFont(new Font("Tahoma", Font.PLAIN, 14));
-		errorLabel.setBounds(10, 329, 266, 22);
+		errorLabel.setBounds(10, 329, 342, 22);
 		contentPane.add(errorLabel);
 		
 		JButton bt_confirm = new JButton("Sign up");
@@ -164,7 +164,7 @@ public class SignUpView extends JFrame {
 			}
 		});
 		bt_confirm.setBackground(new Color(255, 255, 255));
-		bt_confirm.setBounds(97, 362, 89, 23);
+		bt_confirm.setBounds(137, 362, 89, 23);
 		contentPane.add(bt_confirm);
 		
 		JLabel lblNewLabel_4 = new JLabel(" ←");

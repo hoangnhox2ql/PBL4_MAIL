@@ -3,9 +3,13 @@ package view;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import model.MyFile;
+
 import java.io.FileOutputStream;
 import java.awt.Toolkit;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.awt.Color;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -18,6 +22,7 @@ import java.io.IOException;
 import java.awt.event.ActionEvent;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
 
 public class MailView extends JFrame {
@@ -26,6 +31,8 @@ public class MailView extends JFrame {
 	private JTextField text_sender;
 	private JTextField text_subject;
 	private JTextField text_date_time;
+	
+	static ArrayList<MyFile> myFiles = new ArrayList<>();
 
 	/**
 	 * Launch the application.
@@ -59,10 +66,12 @@ public class MailView extends JFrame {
 		contentPane.setLayout(null);
 		
 		JTextArea text_body = new JTextArea();
+		text_body.setEditable(false);
 		text_body.setBounds(10, 142, 422, 207);
 		contentPane.add(text_body);
 		
 		text_sender = new JTextField();
+		text_sender.setEditable(false);
 		text_sender.setBounds(109, 12, 234, 20);
 		contentPane.add(text_sender);
 		text_sender.setColumns(10);
@@ -83,6 +92,7 @@ public class MailView extends JFrame {
 		contentPane.add(btnNewButton);
 		
 		text_subject = new JTextField();
+		text_subject.setEditable(false);
 		text_subject.setBounds(109, 44, 234, 20);
 		contentPane.add(text_subject);
 		text_subject.setColumns(10);
@@ -93,6 +103,7 @@ public class MailView extends JFrame {
 		contentPane.add(lblSubject);
 		
 		text_date_time = new JTextField();
+		text_date_time.setEditable(false);
 		text_date_time.setBounds(109, 75, 234, 20);
 		contentPane.add(text_date_time);
 		text_date_time.setColumns(10);
@@ -110,22 +121,69 @@ public class MailView extends JFrame {
 		JButton btn_download = new JButton("Download");
 		btn_download.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent e) {
-		        // Open a file chooser dialog for saving the file
-		        JFileChooser fileChooser = new JFileChooser();
-		        int result = fileChooser.showSaveDialog(null);
-		        // If a location is selected, initiate the file download
-		        if (result == JFileChooser.APPROVE_OPTION) {
-		            // Chọn file để lấy đường dẫn 
-		            File selectedFile = fileChooser.getSelectedFile();
-		            String localPath = selectedFile.getAbsolutePath();
-		            // Call the getFile function to download and save the file
-		            getFile(sender, subject, date, cbb_file, localPath);
-		        }
+		    	String nameFile = cbb_file.getSelectedItem().toString();
+		    	getFile(nameFile);
+		    	try {
+					String mess = SignInView.dis.readUTF();
+					if(mess.equals("DOWNLOAD_GO")) {
+						
+						int fileId =0;
+						//Your file handling code here
+						int fileNameLength = SignInView.dis.readInt();
+
+						if (fileNameLength > 0) {
+						    byte[] fileNameBytes = new byte[fileNameLength];
+						    SignInView.dis.readFully(fileNameBytes, 0, fileNameBytes.length);
+
+						    String fileName = new String(fileNameBytes);
+						    int fileContentLength = SignInView.dis.readInt();
+
+						    if (fileContentLength > 0) {
+						        byte[] fileContentBytes = new byte[fileContentLength];
+						        SignInView.dis.readFully(fileContentBytes, 0, fileContentBytes.length);
+
+						        JPanel jpFileRow = new JPanel();
+						        jpFileRow.setLayout(new BoxLayout(jpFileRow, BoxLayout.Y_AXIS));
+
+						        JLabel jlFileName = new JLabel(fileName);
+						        jlFileName.setFont(new Font("Arial", Font.BOLD, 20));
+						        jlFileName.setBorder(new EmptyBorder(10, 0, 0, 0));
+
+						        if (getFileExtension(fileName).equalsIgnoreCase("txt")) {
+						            jpFileRow.setName(String.valueOf(fileId));
+						            jpFileRow.add(jlFileName);
+						        } else {
+						            jpFileRow.setName(String.valueOf(fileId));
+						            jpFileRow.add(jlFileName);
+						        }
+						        myFiles.add(new model.MyFile(fileId, fileName, fileContentBytes, getFileExtension(fileName)));
+						        fileId++;
+
+						        // Tự động tải file mới gửi đến
+						        // Open a directory chooser dialog for selecting the directory
+						        JFileChooser fileChooser = new JFileChooser();
+						        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+						        int result = fileChooser.showSaveDialog(null);
+
+						        // If a directory is selected, return the directory path
+						        if (result == JFileChooser.APPROVE_OPTION) {
+						            String directoryPath = fileChooser.getSelectedFile().getPath();
+						            downloadFile(fileName, fileContentBytes,directoryPath);
+						        }
+						        
+						    }
+						}
+					}
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 		    }
 		});
 		btn_download.setBackground(new Color(255, 255, 255));
 		btn_download.setBounds(442, 109, 89, 23);
 		contentPane.add(btn_download);
+
 		
 		text_sender.setText(sender);
 		text_subject.setText(subject);
@@ -133,55 +191,64 @@ public class MailView extends JFrame {
 		showMailBody(text_body,sender,subject,date,cbb_file);
 		
 	}
-	public void showMailBody(JTextArea text_body ,String sender,String subject,LocalDateTime date,JComboBox<String> cbb_file) {
+	public void showMailBody(JTextArea text_body, String sender, String subject, LocalDateTime date, JComboBox<String> cbb_file) {
+	    try {
+	        SignInView.dos.writeUTF("GET_BODY");
+	        SignInView.dos.writeUTF(sender);
+	        SignInView.dos.writeUTF(subject);
+	        SignInView.dos.writeUTF(date.toString());
+
+	        String body = SignInView.dis.readUTF();
+	        text_body.setText(body);
+
+	        int fileCount = SignInView.dis.readInt();
+	        
+	        for (int j = 0; j < fileCount; j++) {
+	            String fileName = SignInView.dis.readUTF();
+	            cbb_file.addItem(fileName);
+	        }
+
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	}
+
+
+	public void getFile(String nameFile) {
 		try {
-			SignInView.dos.writeUTF("GET_BODY");
-			SignInView.dos.writeUTF(sender);
-			SignInView.dos.writeUTF(subject);
-			SignInView.dos.writeUTF(date.toString());
-			String body = SignInView.dis.readUTF();
-			text_body.setText(body);
-			String nameFile = SignInView.dis.readUTF();
-			cbb_file.addItem(nameFile);
+			SignInView.dos.writeUTF("DOWNLOAD");
+			SignInView.dos.writeUTF(nameFile);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
-	public File getFile(String sender, String subject, LocalDateTime date, JComboBox<String> cbb_file, String localPath) {
-	    try {
-	        // Gửi yêu cầu lấy nội dung tệp tin đến server
-	        SignInView.dos.writeUTF("GET_FILE");
-	        SignInView.dos.writeUTF(sender);
-	        SignInView.dos.writeUTF(subject);
-	        SignInView.dos.writeUTF(date.toString());
-	        // Lấy tên tệp tin được chọn từ JComboBox và gửi đi
-	        String selectedFile = (String) cbb_file.getSelectedItem();
-	        SignInView.dos.writeUTF(selectedFile);
+	public static String getFileExtension(String fileName) {
+        int i = fileName.lastIndexOf('.');
 
-	        // Đọc kích thước của buffer từ server
-	        int bufferSize = SignInView.dis.readInt();
+        if (i > 0) {
+            return fileName.substring(i + 1);
+        } else {
+            return "No extension found";
+        }
+    }
+	
+	public static void downloadFile(String fileName, byte[] fileData, String savePath) {
+	    File fileToDownload = new File(savePath, fileName);
 
-	        // Khởi tạo mảng byte để chứa dữ liệu từ server
-	        byte[] buffer = new byte[bufferSize];
+	    try (FileOutputStream fileOutputStream = new FileOutputStream(fileToDownload)) {
+	        fileOutputStream.write(fileData);
+	        fileOutputStream.close();
 
-	        // Đọc dữ liệu từ server vào buffer
-	        SignInView.dis.readFully(buffer);
-
-	        // Lưu dữ liệu vào tệp tin cục bộ
-	        File file = new File(localPath);
-	        try (FileOutputStream fos = new FileOutputStream(file)) {
-	            fos.write(buffer);
-	        }
-
-	        // Trả về đối tượng File đã tạo
-	        return file;
-
-	    } catch (Exception e) {
-	        e.printStackTrace(); // Xử lý ngoại lệ tùy thuộc vào yêu cầu của bạn
-	        return null;
+	        System.out.println("File downloaded successfully to " + savePath);
+	    } catch (IOException ex) {
+	        ex.printStackTrace();
 	    }
 	}
-
+	
 }
+
+
+
+

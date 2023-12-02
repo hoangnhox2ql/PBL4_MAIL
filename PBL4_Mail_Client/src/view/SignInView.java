@@ -93,6 +93,8 @@ public class SignInView extends JFrame {
 		btn_login.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String user =  tf_username.getText();
+				//String user = "trungnhan@gmail.com";
+				//String pass = "1234";
 		    	String pass = tf_password.getText();
 		    	if(!user.isEmpty()&& !pass.isEmpty()) {
 		    		try {

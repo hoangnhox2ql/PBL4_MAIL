@@ -5,18 +5,23 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ComposeView extends JFrame {
 
+	final List<File> filesToSend = new ArrayList<>();
+	
     private JPanel contentPane;
     private JTextField toTextField;
     private JTextField subjectTextField;
     private JTextArea messageTextArea;
     private JButton attachButton;
-    public File fileToSend;
-    private JTextField text_link_file;
 //    public static void main(String[] args) {
 //        EventQueue.invokeLater(new Runnable() {
 //            public void run() {
@@ -30,11 +35,12 @@ public class ComposeView extends JFrame {
 //        });
 //    }
 
-    public ComposeView(String username) {
+    public ComposeView(String username,String receiver,String subject,String body) {
+    	setTitle("Compose");
     	setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\ASUS\\Downloads\\3158180.png"));
     	setBackground(new Color(255, 255, 255));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBounds(100, 100, 600, 400);
+        setBounds(100, 100, 600, 429);
         contentPane = new JPanel();
         contentPane.setBackground(new Color(255, 255, 255));
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -67,13 +73,27 @@ public class ComposeView extends JFrame {
         JScrollPane scrollPane = new JScrollPane(messageTextArea);
         scrollPane.setBounds(10, 100, 400, 200);
         contentPane.add(scrollPane);
+        
+        JComboBox<String> cbb_file = new JComboBox<String>();
+        cbb_file.setBounds(10, 329, 400, 25);
+        contentPane.add(cbb_file);
 
         attachButton = new JButton("Attach File");
         attachButton.setBounds(420, 328, 120, 25);
         attachButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                fileToSend = attachFile();
+            	JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setMultiSelectionEnabled(true);
+                int option = fileChooser.showOpenDialog(null);
+
+                if (option == JFileChooser.APPROVE_OPTION) {
+                    for (File file : fileChooser.getSelectedFiles()) {
+                        filesToSend.add(file);
+                        cbb_file.addItem(file.getName());
+                        
+                    }
+                }
             }
         });
         contentPane.add(attachButton);
@@ -83,8 +103,8 @@ public class ComposeView extends JFrame {
         sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-            	sendEmail(username,fileToSend);
-//              sendEmail(username);
+//            	sendEmail(username,fileToSend);
+            	sendEmail(username);
             }
         });
         contentPane.add(sendButton);
@@ -103,110 +123,96 @@ public class ComposeView extends JFrame {
         lblNewLabel.setBounds(10, 311, 30, 14);
         contentPane.add(lblNewLabel);
         
-        text_link_file = new JTextField();
-        text_link_file.setBounds(10, 330, 400, 20);
-        contentPane.add(text_link_file);
-        text_link_file.setColumns(10);
+        toTextField.setText(receiver);
+        subjectTextField.setText(subject);
+        messageTextArea.setText(body);
+        
+        
+        
+        JButton delete_file = new JButton("Delete File");
+        delete_file.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		int i = cbb_file.getSelectedIndex();
+        		if(i>=0) {
+        			filesToSend.remove(i);
+            		cbb_file.removeItemAt(i);
+        		}
+        		else {
+        			JOptionPane.showMessageDialog(ComposeView.this, "No file existed");
+        		}
+        		
+        		
+        	}
+        });
+        delete_file.setBounds(420, 356, 120, 23);
+        contentPane.add(delete_file);
+        
     }
 
-    public File attachFile() {
-        JFileChooser fileChooser = new JFileChooser();
-        int result = fileChooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = fileChooser.getSelectedFile();
-            // Xử lý việc đính kèm tệp tin ở đây
-            text_link_file.setText("Attached file: " + selectedFile.getAbsolutePath());
-            return selectedFile;
+    private static void sendFileToServer(File fileToSend) {
+        try {
+       FileInputStream fileInputStream = new FileInputStream(fileToSend.getAbsolutePath());
+      String fileName = fileToSend.getName();
+      byte[] fileNameBytes = fileName.getBytes();
+      byte[] fileContentBytes = new byte[(int) fileToSend.length()];
+      fileInputStream.read(fileContentBytes);
+      
+      // Send file information
+      SignInView.dos.writeInt(fileNameBytes.length);
+      SignInView.dos.write(fileNameBytes);
+      SignInView.dos.writeInt(fileContentBytes.length);
+      SignInView.dos.write(fileContentBytes);
+        } catch (IOException error) {
+            error.printStackTrace();
         }
-        return null;
     }
     
-    private void sendEmail(String username, File file) {
-        try {
-            String to = toTextField.getText();
-            String subject = subjectTextField.getText();
-            String message = messageTextArea.getText();
+    private void sendEmail(String username) {
+        String to = toTextField.getText();
+        String subject = subjectTextField.getText();
+        String message = messageTextArea.getText();
+        
+        boolean redFlag = !filesToSend.isEmpty(); // Set redFlag to true if there are files to send
 
-            if (to.equals("") && subject.equals("")) {
-                JOptionPane.showMessageDialog(ComposeView.this, "Your mail's information is clear.");
-            } else if (to.equals("") && !subject.equals("")) {
-                JOptionPane.showMessageDialog(ComposeView.this, "Please enter the Receiver.");
-            } else if (!to.equals("") && subject.equals("")) {
-                JOptionPane.showMessageDialog(ComposeView.this, "Please enter the Subject.");
-            } else if (!to.equals("") && !subject.equals("")) {
+        if (to.equals("") && subject.equals("")) {
+            JOptionPane.showMessageDialog(ComposeView.this, "Your mail's information is clear.");
+        } else if (to.equals("") && !subject.equals("")) {
+            JOptionPane.showMessageDialog(ComposeView.this, "Please enter the Receiver.");
+        } else if (!to.equals("") && subject.equals("")) {
+            JOptionPane.showMessageDialog(ComposeView.this, "Please enter the Subject.");
+        } else {
+            try {
                 SignInView.dos.writeUTF("SEND_MAIL");
                 SignInView.dos.writeUTF(username);
                 SignInView.dos.writeUTF(to);
                 SignInView.dos.writeUTF(subject);
                 SignInView.dos.writeUTF(message);
-
-                if (file != null && file.exists()) {
-                    SignInView.dos.writeUTF("YES");
-                    System.out.println(file);
-                    SignInView.dos.writeUTF(file.getName());
-                    SignInView.dos.writeLong(file.length());
-
-                    try (FileInputStream fileInputStream = new FileInputStream(file)) {
-                        int bytesRead;
-                        byte[] buffer = new byte[4 * 1024];
-                        while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-                            SignInView.dos.write(buffer, 0, bytesRead);
-                        }
+                
+                // Send redFlag to the server
+                SignInView.dos.writeUTF(redFlag ? "yes" : "no");
+                SignInView.dos.writeUTF(filesToSend.size() + "");
+                // If there are files, send them to the server
+                if (redFlag) {
+                    for (File fileToSend : filesToSend) {
+                    	sendFileToServer(fileToSend);
                     }
-                } else {
-                    // Indicate that there is no attachment
-                    SignInView.dos.writeUTF("NO");
                 }
 
-                // Check for server response
                 String rep = SignInView.dis.readUTF();
                 if (rep.equals("MAIL_SENT_SUCCESS")) {
                     JOptionPane.showMessageDialog(this, "Sent mail success");
                     dispose();
-                } else {
+                } else if (rep.equals("MAIL_SENT_FAILURE")) {
                     JOptionPane.showMessageDialog(this, "Email address was not found");
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
-
-
-
-
-//    private void sendEmail(String username) {
-//        String to = toTextField.getText();
-//        String subject = subjectTextField.getText();
-//        String message = messageTextArea.getText();
-//        if(to.equals("") && subject.equals("")) {
-//        	JOptionPane.showMessageDialog(ComposeView.this, "Your mail's information is clear.");
-//        }
-//        else if (to.equals("") && !subject.equals("")) {
-//            JOptionPane.showMessageDialog(ComposeView.this, "Please enter the Receiver.");
-//        } else if (!to.equals("") && subject.equals("")) {
-//            JOptionPane.showMessageDialog(ComposeView.this, "Please enter the Subject.");
-//        }
-//        else if(!to.equals("") && !subject.equals("")) {
-//        	try {
-//        		SignInView.dos.writeUTF("SEND_MAIL");
-//        		SignInView.dos.writeUTF(username);
-//        		SignInView.dos.writeUTF(to);
-//        		SignInView.dos.writeUTF(subject);
-//        		SignInView.dos.writeUTF(message);
-//        		String rep = SignInView.dis.readUTF();
-//        		if(rep.equals("MAIL_SENT_SUCCESS")) {
-//        			JOptionPane.showMessageDialog(this,"Sent mail success");
-//        			//dispose();
-//        		}
-//        		else if(rep.equals("MAIL_SENT_FAILURE")) {
-//        			JOptionPane.showMessageDialog(this,"Email address was not found");
-//        		}
-//        	} catch (Exception e) {
-//        			//	TODO: handle exception
-//        	}
-//        }  
-//    }
     
-
 }
+
+
+
+

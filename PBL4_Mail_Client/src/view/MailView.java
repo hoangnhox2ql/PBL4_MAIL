@@ -139,6 +139,7 @@ public class MailView extends JFrame {
 						    int fileContentLength = SignInView.dis.readInt();
 
 						    if (fileContentLength > 0) {
+						    	
 						        byte[] fileContentBytes = new byte[fileContentLength];
 						        SignInView.dis.readFully(fileContentBytes, 0, fileContentBytes.length);
 

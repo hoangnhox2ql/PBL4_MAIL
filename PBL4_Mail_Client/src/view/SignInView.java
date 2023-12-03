@@ -156,7 +156,7 @@ public class SignInView extends JFrame {
 		lblNewLabel.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		lblNewLabel.setBounds(10, 202, 85, 14);
 		contentPane.add(lblNewLabel);
-		
+			
 		JLabel btn_createAccount = new JLabel("Create an account");
 		btn_createAccount.addMouseListener(new MouseAdapter() {
 			@Override

@@ -97,7 +97,22 @@ public class ComposeView extends JFrame {
             }
         });
         contentPane.add(attachButton);
-
+        
+        JButton btn_sendListMail = new JButton("SendListMail");
+		btn_sendListMail.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				java.awt.EventQueue.invokeLater(new Runnable() {
+	                public void run() {
+	                    new SendListMail().setVisible(true);
+	                }
+	            });
+	            
+			}
+		});
+		btn_sendListMail.setBackground(new Color(255, 255, 255));
+		btn_sendListMail.setBounds(420, 205, 120, 25);
+		contentPane.add(btn_sendListMail); 
+        
         JButton sendButton = new JButton("Send");
         sendButton.setBounds(420, 241, 120, 25);
         sendButton.addActionListener(new ActionListener() {

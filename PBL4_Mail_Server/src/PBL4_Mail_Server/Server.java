@@ -53,7 +53,7 @@ public class Server {
 }
 
 class EmailProcessing extends Thread {
-	static Socket soc;
+	Socket soc;
 	Server server;
 	
 	static ArrayList<MyFile> myFiles = new ArrayList<>();
@@ -64,7 +64,7 @@ class EmailProcessing extends Thread {
 		this.server = server;
 	}
 	
-	private static void sendFileToServer(File fileToSend) {
+	private void sendFileToServer(File fileToSend) {
         try (FileInputStream fileInputStream = new FileInputStream(fileToSend.getAbsolutePath());
              DataOutputStream dataOutputStream = new DataOutputStream(soc.getOutputStream())) {
             String fileName = fileToSend.getName();
@@ -365,7 +365,7 @@ class EmailProcessing extends Thread {
 				
 				if(mess.equals("DOWNLOAD")) {
 					String nameFile = dis.readUTF();
-					File fileToSend = new File("C:/Users/ASUS/Documents/Java/PBL4_Mail_Server/" + nameFile);
+					File fileToSend = new File("C:/Users/ADMIN/eclipse-workspace/PBL4_bug/" + nameFile);
 					listFilesToSend.add(fileToSend);
 					dos.writeUTF("DOWNLOAD_GO");                    
 					for (File file : listFilesToSend) {

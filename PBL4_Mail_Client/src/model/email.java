@@ -11,7 +11,6 @@ public class email implements Serializable {
     private String receiver;
     private String subject;
     private String body;
-    private File attachments;
     private LocalDateTime sendDate;
 
     // Constructors
@@ -26,7 +25,6 @@ public class email implements Serializable {
         this.receiver = receiver;
         this.subject = subject;
         this.body = body;
-        this.attachments = attachments;
         this.sendDate = sendDate;
     }
 
@@ -64,14 +62,6 @@ public class email implements Serializable {
 		this.body = body;
 	}
 
-	public File getAttachments() {
-		return attachments;
-	}
-
-	public void setAttachments(File attachments) {
-		this.attachments = attachments;
-	}
-
 	public LocalDateTime getSendDate() {
 		return sendDate;
 	}
@@ -89,8 +79,8 @@ public class email implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("Email(sender=%s, receiver=%s, subject=%s, body=%s, attachments=%s, sendDate=%s)",
-                sender, receiver, subject, body, attachments, sendDate);
+        return String.format("Email(sender=%s, receiver=%s, subject=%s, body=%s,sendDate=%s)",
+                sender, receiver, subject, body, sendDate);
     }
 
 	

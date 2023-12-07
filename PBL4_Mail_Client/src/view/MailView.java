@@ -1,14 +1,15 @@
 package view;
 
-import java.awt.EventQueue;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.text.JTextComponent;
 
+import model.MyFile;
+
+import java.io.FileOutputStream;
 import java.awt.Toolkit;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.awt.Color;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -16,8 +17,13 @@ import javax.swing.JLabel;
 import java.awt.Font;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
 import java.awt.event.ActionEvent;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
 
 public class MailView extends JFrame {
 
@@ -25,6 +31,8 @@ public class MailView extends JFrame {
 	private JTextField text_sender;
 	private JTextField text_subject;
 	private JTextField text_date_time;
+	
+	static ArrayList<MyFile> myFiles = new ArrayList<>();
 
 	/**
 	 * Launch the application.
@@ -46,6 +54,7 @@ public class MailView extends JFrame {
 	 * Create the frame.
 	 */
 	public MailView(String sender,String subject,LocalDateTime date) {
+		
 		setTitle("Mail");
 		setBackground(new Color(255, 255, 255));
 		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\ASUS\\Downloads\\3158180.png"));
@@ -58,10 +67,12 @@ public class MailView extends JFrame {
 		contentPane.setLayout(null);
 		
 		JTextArea text_body = new JTextArea();
-		text_body.setBounds(10, 113, 422, 236);
+		text_body.setEditable(false);
+		text_body.setBounds(10, 142, 422, 207);
 		contentPane.add(text_body);
 		
 		text_sender = new JTextField();
+		text_sender.setEditable(false);
 		text_sender.setBounds(109, 12, 234, 20);
 		contentPane.add(text_sender);
 		text_sender.setColumns(10);
@@ -71,7 +82,7 @@ public class MailView extends JFrame {
 		lblNewLabel.setBounds(10, 14, 55, 14);
 		contentPane.add(lblNewLabel);
 		
-		JButton btnNewButton = new JButton("CANCEL");
+		JButton btnNewButton = new JButton("Cancel");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				dispose();
@@ -82,6 +93,7 @@ public class MailView extends JFrame {
 		contentPane.add(btnNewButton);
 		
 		text_subject = new JTextField();
+		text_subject.setEditable(false);
 		text_subject.setBounds(109, 44, 234, 20);
 		contentPane.add(text_subject);
 		text_subject.setColumns(10);
@@ -92,6 +104,7 @@ public class MailView extends JFrame {
 		contentPane.add(lblSubject);
 		
 		text_date_time = new JTextField();
+		text_date_time.setEditable(false);
 		text_date_time.setBounds(109, 75, 234, 20);
 		contentPane.add(text_date_time);
 		text_date_time.setColumns(10);
@@ -101,22 +114,98 @@ public class MailView extends JFrame {
 		lblDatetime.setBounds(10, 78, 89, 14);
 		contentPane.add(lblDatetime);
 		
+		JComboBox<String> cbb_file = new JComboBox<String>();
+		cbb_file.setModel(new DefaultComboBoxModel<String>(new String[] {"All"}));
+		cbb_file.setBounds(10, 109, 422, 22);
+		contentPane.add(cbb_file);
+		
+		JButton btn_download = new JButton("Download");
+		btn_download.addActionListener(new ActionListener() {
+		    public void actionPerformed(ActionEvent e) {
+		    	try {
+		    	    String fileName = cbb_file.getSelectedItem().toString();
+		    	    SignInView.dos.writeUTF("DOWNLOAD");
+		    	    SignInView.dos.writeUTF(fileName);
+
+		    	    if ("DOWNLOAD_GO".equals(SignInView.dis.readUTF())) {
+		    	        int fileId = 0;
+		    	        int fileNameLength = SignInView.dis.readInt();
+
+		    	        if (fileNameLength > 0) {
+		    	            byte[] fileNameBytes = new byte[fileNameLength];
+		    	            SignInView.dis.readFully(fileNameBytes);
+		    	            String fileNameStr = new String(fileNameBytes);
+
+		    	            int fileContentLength = SignInView.dis.readInt();
+
+		    	            if (fileContentLength > 0) {
+		    	                byte[] fileContentBytes = new byte[fileContentLength];
+		    	                SignInView.dis.readFully(fileContentBytes);
+
+		    	                myFiles.add(new model.MyFile(fileId, fileNameStr, fileContentBytes));
+		    	                fileId++;
+
+		    	                // Open a directory chooser dialog
+		    	                JFileChooser fileChooser = new JFileChooser();
+		    	                fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+		    	                if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+		    	                    String directoryPath = fileChooser.getSelectedFile().getPath();
+		    	                    downloadFile(fileNameStr, fileContentBytes, directoryPath);
+		    	                }
+		    	            }
+		    	        }
+		    	    }
+		    	} catch (IOException e1) {
+		    	    e1.printStackTrace();
+		    	}
+
+		    }
+		});
+		btn_download.setBackground(new Color(255, 255, 255));
+		btn_download.setBounds(442, 109, 89, 23);
+		contentPane.add(btn_download);
+		
 		text_sender.setText(sender);
 		text_subject.setText(subject);
 		text_date_time.setText(date.toString());
-		showMailBody(text_body,sender,subject,date);
+		showMailBody(text_body,sender,subject,date,cbb_file);
+		
 	}
-	public void showMailBody(JTextArea text_body ,String sender,String subject,LocalDateTime date) {
-		try {
-			SignInView.dos.writeUTF("GET_BODY");
-			SignInView.dos.writeUTF(sender);
-			SignInView.dos.writeUTF(subject);
-			SignInView.dos.writeUTF(date.toString());
-			String body = SignInView.dis.readUTF();
-			text_body.setText(body);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void showMailBody(JTextArea text_body, String sender, String subject, LocalDateTime date, JComboBox<String> cbb_file) {
+	    	try {
+		        SignInView.dos.writeUTF("GET_BODY");
+		        SignInView.dos.writeUTF(sender);
+		        SignInView.dos.writeUTF(subject);
+		        SignInView.dos.writeUTF(date.toString());
+
+		        String body = SignInView.dis.readUTF();
+		        text_body.setText(body);
+
+		        int fileCount = SignInView.dis.readInt();
+		        
+		        for (int j = 0; j < fileCount; j++) {
+		            String fileName = SignInView.dis.readUTF();
+		            cbb_file.addItem(fileName);
+		        }
+
+		    } catch (IOException e) {
+		        e.printStackTrace();
+		    }
 	}
+	
+	public static void downloadFile(String fileName, byte[] fileData, String savePath) {
+	    File fileToDownload = new File(savePath, fileName);
+	    try (FileOutputStream fileOutputStream = new FileOutputStream(fileToDownload)) {
+	        fileOutputStream.write(fileData);
+	        System.out.println("File downloaded successfully to " + savePath);
+	    } catch (IOException ex) {
+	        ex.printStackTrace();
+	    }
+	}
+	
 }
+
+
+
+

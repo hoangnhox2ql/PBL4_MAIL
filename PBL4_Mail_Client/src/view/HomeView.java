@@ -81,6 +81,7 @@ public class HomeView extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				HomeView.this.dispose();
+				
 			}
 		});
 		lblNewLabel_1.setForeground(new Color(255, 0, 0));
@@ -124,7 +125,7 @@ public class HomeView extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				java.awt.EventQueue.invokeLater(new Runnable() {
 	                public void run() {
-	                    new ComposeView(userName).setVisible(true);
+	                    new ComposeView(userName,"","","").setVisible(true);
 	                }
 	            });
 	            
@@ -180,24 +181,28 @@ public class HomeView extends JFrame {
 		
 		JButton btn_deleteMail = new JButton("DELETE");
 		btn_deleteMail.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int selectedRow = table_mail.getSelectedRow(); // Lấy chỉ mục của hàng đã chọn
-		        if (selectedRow >= 0) {
-		            Object value = table_mail.getValueAt(selectedRow, 1); 
-		            String valueString = value.toString();
+		    public void actionPerformed(ActionEvent e) {
+		        int selectedRow = table_mail.getSelectedRow(); // Lấy chỉ mục của hàng đã chọn
+		        if (selectedRow == 1) {
+		            String sender = table_mail.getValueAt(selectedRow, 0).toString();
+		            String subject = table_mail.getValueAt(selectedRow, 1).toString();
+		            String date = table_mail.getValueAt(selectedRow, 2).toString();
+
 		            try {
-		            	SignInView.dos.writeUTF("DELETE");
-						SignInView.dos.writeUTF(valueString);
-						String rep = SignInView.dis.readUTF();
-						if(rep.equals("DELETE_OK")) {
-				        	showdata(userName);
-				        }
-					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						System.out.println("ko the ket noi den sever");
-					}
+		                SignInView.dos.writeUTF("DELETE");
+		                SignInView.dos.writeUTF(sender);
+		                SignInView.dos.writeUTF(subject);
+		                SignInView.dos.writeUTF(date);
+
+		                String rep = SignInView.dis.readUTF();
+		                if (rep.equals("DELETE_OK")) {
+		                    showdata(userName);
+		                }
+		            } catch (IOException e1) {
+		                System.out.println("ko the ket noi den sever");
+		            }
 		        }
-			}
+		    }
 		});
 		btn_deleteMail.setBackground(new Color(255, 255, 255));
 		btn_deleteMail.setBounds(538, 332, 96, 23);

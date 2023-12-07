@@ -53,7 +53,7 @@ public class ListSentView extends JFrame {
 		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\ASUS\\Downloads\\3158180.png"));
 		setTitle("Mail Sent");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 576, 387);
+		setBounds(100, 100, 584, 387);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 
@@ -70,17 +70,16 @@ public class ListSentView extends JFrame {
 			public void mousePressed(MouseEvent e) {
 				int selectedRow = table_mail.getSelectedRow();
 				if (selectedRow != -1) {
-				    String sender = (String) table_mail.getValueAt(selectedRow, 0);
+				    String receiver = (String) table_mail.getValueAt(selectedRow, 0);
 				    String subject = (String) table_mail.getValueAt(selectedRow, 1);
 				    LocalDateTime date = (LocalDateTime) table_mail.getValueAt(selectedRow, 2);
 				    java.awt.EventQueue.invokeLater(new Runnable() {
 		                public void run() {
 		                    //new HomeView(user).setVisible(true);
-		                	new MailView(sender,subject,date).setVisible(true);
+		                	new ForwardView(userName,receiver,subject,date).setVisible(true);
 		                }
 		            });
 				}
-				
 			}
 		});
 		table_mail.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -92,17 +91,14 @@ public class ListSentView extends JFrame {
 		scrollPane.setViewportView(table_mail);
 		
 		JButton btnNewButton = new JButton("CANCEL");
+		btnNewButton.setBackground(new Color(255, 255, 255));
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				dispose();
 			}
 		});
-		btnNewButton.setBounds(461, 314, 89, 23);
+		btnNewButton.setBounds(461, 314, 97, 23);
 		contentPane.add(btnNewButton);
-		
-		JButton btn_forward = new JButton("FORWARD");
-		btn_forward.setBounds(461, 256, 89, 23);
-		contentPane.add(btn_forward);
 		
 		  try {
           	SignInView.dos.writeUTF("LIST_MAIL_SENT");

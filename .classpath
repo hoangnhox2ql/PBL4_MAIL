@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<classpath>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="src" path="PBL4_Mail_Client/src"/>
-	<classpathentry kind="src" path="PBL4_Mail_Server/src"/>
-	<classpathentry kind="output" path="PBL4_Mail_Client/bin"/>
-</classpath>

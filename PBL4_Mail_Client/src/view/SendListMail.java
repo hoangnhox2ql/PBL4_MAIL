@@ -5,9 +5,11 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -98,9 +100,86 @@ final List<File> filesToSend = new ArrayList<>();
         });
         contentPane.add(sendButton);
 	}
-	public void sendEmail(String username)
-	{
-		
-	}
+	private void sendEmail(String username) {
+        String filePath = filechosse.getAbsolutePath();
+
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+            	String addAllFile;
+                String[] parts = line.split("\t");
+                String to = parts[0];
+                String subject = parts[1];
+                String message = parts[2];
+                if(parts.length >= 4)
+                {
+                	
+                	for(int i = 3; i < parts.length;i++)
+                	{
+                		addAllFile = parts[i];
+                		File addFile = new File(addAllFile);
+                        filesToSend.add(addFile);
+                	}
+                }
+
+                boolean redFlag = !filesToSend.isEmpty();
+                // Kiểm tra điều kiện và xử lý ngoại lệ
+                if (to.isEmpty() && subject.isEmpty()) {
+                    JOptionPane.showMessageDialog(SendListMail.this, "Thông tin email của bạn rỗng.");
+                } else if (to.isEmpty() && !subject.isEmpty()) {
+                    JOptionPane.showMessageDialog(SendListMail.this, "Vui lòng nhập người nhận.");
+                } else if (!to.isEmpty() && subject.isEmpty()) {
+                    JOptionPane.showMessageDialog(SendListMail.this, "Vui lòng nhập chủ đề.");
+                }else {
+                	SignInView.dos.writeUTF("SEND_MAIL");
+                	SignInView.dos.writeUTF(username);
+                    SignInView.dos.writeUTF(to);
+                    SignInView.dos.writeUTF(subject);
+                    SignInView.dos.writeUTF(message);
+                    
+                    
+                    SignInView.dos.writeUTF(redFlag ? "yes" : "no");
+                    SignInView.dos.writeUTF(filesToSend.size() + "");
+                    
+                    if (redFlag) {
+                        for (File fileToSend : filesToSend) {
+                        	sendFileToServer(fileToSend);
+                        }
+                    }
+                    String rept = SignInView.dis.readUTF();
+
+                    if (rept.equals("MAIL_SENT_SUCCESS")) {
+                        JOptionPane.showMessageDialog(this, "Sent mail success");
+                        dispose();
+                    } else if (rept.equals("MAIL_SENT_FAILURE")) {
+                        JOptionPane.showMessageDialog(this, "Email address was not found");
+                    }
+                    filesToSend.clear();
+                }
+                
+                
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+	private static void sendFileToServer(File fileToSend) {
+        try {
+       FileInputStream fileInputStream = new FileInputStream(fileToSend.getAbsolutePath());
+      String fileName = fileToSend.getName();
+      byte[] fileNameBytes = fileName.getBytes();
+      byte[] fileContentBytes = new byte[(int) fileToSend.length()];
+      fileInputStream.read(fileContentBytes);
+      
+      // Send file information
+      SignInView.dos.writeInt(fileNameBytes.length);
+      SignInView.dos.write(fileNameBytes);
+      SignInView.dos.writeInt(fileContentBytes.length);
+      SignInView.dos.write(fileContentBytes);
+        } catch (IOException error) {
+            error.printStackTrace();
+        }
+    }
 	
 }

@@ -16,21 +16,19 @@ import java.io.InputStream;
 
 
 public class sql_handler {
-	static String serverName = "LAPTOP-0DP7SHTA\\SQLEXPRESS";
-	static String db = "pbl4_mail";
-	static String url = "jdbc:sqlserver://" + serverName + ":1433;databaseName =" + db + ";encrypt=true;trustServerCertificate=true;";
-	static String user = "sa";
-	static String pass = "123456";
-
-	public static Connection getConnection() {// connection function
-		Connection cnn = null;
-		try {
-			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-			cnn = DriverManager.getConnection(url, user, pass);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return cnn;	
+	static String url = "jdbc:mysql://127.0.0.1:3306/pbl4_mail";
+    static String user = "root";
+    static String pass = "";
+	public static Connection getConnection() {
+        Connection conn = null;
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            conn = DriverManager.getConnection(url, user, pass);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return conn;
+    
 	}
 	
 	//thêm tài khoản
@@ -262,7 +260,7 @@ public class sql_handler {
 		    List<String> nameFiles = new ArrayList<>();
 
 		    try {
-		        String query = "SELECT file_name FROM [file] WHERE id_mail = ?";
+		        String query = "SELECT file_name FROM `file` WHERE id_mail = ?";
 		        try (Connection cnn = getConnection();
 		             PreparedStatement pstm = cnn.prepareStatement(query)) {
 
@@ -289,7 +287,7 @@ public class sql_handler {
 
 		    try {
 		        Connection connection = getConnection();
-		        String query = "INSERT INTO email (sender, receiver, subject, body, send_date) VALUES (?, ?, ?, ?, GETDATE());";
+		        String query = "INSERT INTO email (sender, receiver, subject, body, send_date) VALUES (?, ?, ?, ?, now());";
 
 		        try (PreparedStatement preparedStatement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
 		            preparedStatement.setString(1, sender);
@@ -305,7 +303,7 @@ public class sql_handler {
 		                int lastMailId = generatedKeys.getInt(1);
 
 		                // Insert id_mail into email_save table
-		                String mailSaveQuery = "INSERT INTO email_save (id_mail, sender, receiver, subject, body, send_date) VALUES (?, ?, ?, ?, ?, GETDATE());";
+		                String mailSaveQuery = "INSERT INTO email_save (id_mail, sender, receiver, subject, body, send_date) VALUES (?, ?, ?, ?, ?, now());";
 
 		                try (PreparedStatement mailSaveStatement = connection.prepareStatement(mailSaveQuery)) {
 		                    mailSaveStatement.setInt(1, lastMailId);
@@ -336,7 +334,7 @@ public class sql_handler {
 		        connection.setAutoCommit(false); // Bắt đầu giao dịch
 
 		        // Chèn dữ liệu vào bảng Mail
-		        String mailQuery = "INSERT INTO email (sender, receiver, subject, body, send_date) VALUES (?, ?, ?, ?, GETDATE());";
+		        String mailQuery = "INSERT INTO email (sender, receiver, subject, body, send_date) VALUES (?, ?, ?, ?, now());";
 
 		        try (PreparedStatement mailStatement = connection.prepareStatement(mailQuery, Statement.RETURN_GENERATED_KEYS)) {
 		            mailStatement.setString(1, sender);
@@ -354,7 +352,7 @@ public class sql_handler {
 		                    int lastMailId = generatedKeys.getInt(1);
 
 		                    // Chèn dữ liệu vào bảng File sử dụng INNER JOIN
-		                    String fileQuery = "INSERT INTO [file] (id_mail, file_name) VALUES (?, ?);";
+		                    String fileQuery = "INSERT INTO `file` (id_mail, file_name) VALUES (?, ?);";
 
 		                    try (PreparedStatement fileStatement = connection.prepareStatement(fileQuery)) {
 		                        // Sử dụng vòng lặp để chèn từng tên file
@@ -377,7 +375,7 @@ public class sql_handler {
 		                    }
 
 		                    // Insert id_mail into email_save table
-		                    String mailSaveQuery = "INSERT INTO email_save (id_mail, sender, receiver, subject, body, send_date) VALUES (?, ?, ?, ?, ?, GETDATE());";
+		                    String mailSaveQuery = "INSERT INTO email_save (id_mail, sender, receiver, subject, body, send_date) VALUES (?, ?, ?, ?, ?, now());";
 
 		                    try (PreparedStatement mailSaveStatement = connection.prepareStatement(mailSaveQuery)) {
 		                        mailSaveStatement.setInt(1, lastMailId);
@@ -434,7 +432,7 @@ public class sql_handler {
 
 		public static boolean deleteMailFile(int id_mail) {
 			try {
-		        String query = "delete FROM [file] WHERE id_mail = ? ";
+		        String query = "delete FROM `file` WHERE id_mail = ? ";
 
 		        Connection cnn = getConnection();
 		        PreparedStatement pstm = cnn.prepareStatement(query);

@@ -370,7 +370,7 @@ class EmailProcessing extends Thread {
 				
 				if(mess.equals("DOWNLOAD")) {
 					String nameFile = dis.readUTF();
-					File fileToSend = new File("C:\\Users\\ASUS\\Documents\\Java\\PBL4_Mail_Server\\" + nameFile);
+					File fileToSend = new File("C:\\Users\\ADMIN\\eclipse-workspace\\PBL4_MAIL\\" + nameFile);
 					listFilesToSend.add(fileToSend);
 					dos.writeUTF("DOWNLOAD_GO");     
 					sendFileToServer(fileToSend);
